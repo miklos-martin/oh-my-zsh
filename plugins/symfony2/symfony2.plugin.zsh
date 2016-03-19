@@ -58,24 +58,28 @@ _symfony2 ()
     esac
 }
 
+_symfony_console () {
+  echo "php $(find . -maxdepth 2 -mindepth 1 -name 'console' -type f | head -n 1)"
+}
+
 _symfony2_get_command_list () {
-	$1 --no-ansi | sed "1,/Available commands/d" | awk '/^  [a-z]+/ { print $1 }' | sed -e 's/:/\:/g'
+   `_symfony_console` --no-ansi | sed "1,/Available commands/d" | awk '/^  ?[^ ]+ / { print $1 }'
 }
 
-_symfony2_get_entity_list () {
-    $1 doctrine:mapping:info | grep Bundle | cut -d ' ' -f 4 | awk '{ split($0, A, /\\/); for ( var in A ) { if ( match(A[var], /.*Bundle/) ) { bundle=A[var]; } } print bundle":"A[var] }'
+_symfony2 () {
+   compadd `_symfony2_get_command_list`
 }
 
-for console_command in $SYMFONY_DO_COMPLETE_CONSOLE
-do
-    compdef _symfony2 $console_command
-done
+compdef _symfony2 '`_symfony_console`'
+compdef _symfony2 'app/console'
+compdef _symfony2 'bin/console'
+compdef _symfony2 sf
 
 #Alias
-
-alias sf2='php app/console'
-alias sf2clear='php app/console cache:clear'
-alias sf='php app/console'
-alias sfcl='php app/console cache:clear'
-alias sfroute='php app/console router:debug'
-alias sfgb='php app/console generate:bundle'
+alias sf='`_symfony_console`'
+alias sfcl='sf cache:clear'
+alias sfsr='sf server:run -vvv'
+alias sfcw='sf cache:warmup'
+alias sfroute='sf router:debug'
+alias sfcontainer='sf container:debug'
+alias sfgb='sf generate:bundle'
